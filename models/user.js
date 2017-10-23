@@ -22,10 +22,10 @@ const UserSchema = new Schema({
     lastName: { type: String }
   },
   role: {
-    type: String,
-    enum: ['Member', 'Client', 'Owner', 'Admin'],
-    default: 'Member'
+    type: Number,
+    default: 0
   },
+  block: { type: Number,enum: [ 0,1 ], default: 0 },
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date }
 },

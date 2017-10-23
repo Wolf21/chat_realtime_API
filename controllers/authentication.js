@@ -49,6 +49,7 @@ exports.register = function(req, res, next) {
   const firstName = req.body.firstName;
   const lastName = req.body.lastName;
   const password = req.body.password;
+  const role = req.body.role;
 
   // Return error if no email provided
   if (!email) {
@@ -77,7 +78,8 @@ exports.register = function(req, res, next) {
       let user = new User({
         email: email,
         password: password,
-        profile: { firstName: firstName, lastName: lastName }
+        profile: { firstName: firstName, lastName: lastName },
+        role: role
       });
 
       user.save(function(err, user) {

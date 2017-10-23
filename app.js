@@ -5,8 +5,9 @@ const express = require('express'),
       logger = require('morgan'),
       bodyParser = require('body-parser'),
       mongoose = require ('mongoose'),
+       path = require('path'),
       config = require('./config/main');
-
+      //flash = require('connect-flash');
 
 // Database Connection
 mongoose.connect(config.database);  
@@ -20,7 +21,14 @@ console.log('Your server is running on port ' + config.port + '.');
 socketEvents = require('./socketEvents');  
 const io = require('socket.io').listen(server);
 
-socketEvents(io);  
+socketEvents(io);
+
+//
+//app.use(flash());
+app.use(express.static('public'));
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
+
 // Setting up basic middleware for all Express requests
 app.use(logger('dev')); // Log requests to API using morgan
 
@@ -39,3 +47,8 @@ app.use(bodyParser.json());
 const apiRoutes = (require('./controllers/routes'));
 // connect the api routes under /api/*
 app.use('/api', apiRoutes);
+
+//admin routes
+
+const adminRoutes = (require('./controllers/adminRoutes'));
+app.use('/', adminRoutes);

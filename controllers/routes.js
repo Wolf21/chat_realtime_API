@@ -2,8 +2,7 @@
 const AuthenticationController = require('./authentication');  
 const express = require('express');
 const passportService = require('../config/passport');
-const passport = require('passport'); 
-//UserController = require('./controllers/user'),
+const passport = require('passport');
 const ChatController = require('./chat');
 
 
@@ -17,10 +16,8 @@ const requireAuth = passport.authenticate('jwt', { session: false });
 const requireLogin = passport.authenticate('local', { session: false });  
 
 // // Constants for role types
-const REQUIRE_ADMIN = "Admin",  
-      REQUIRE_OWNER = "Owner",
-      REQUIRE_CLIENT = "Client",
-      REQUIRE_MEMBER = "Member";
+// const REQUIRE_ADMIN = "Admin",
+//       REQUIRE_MEMBER = "Member";
  
 // // Initializing route groups
 // const 	apiRoutes = express.Router(),
