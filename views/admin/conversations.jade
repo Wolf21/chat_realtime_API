@@ -1,0 +1,26 @@
+extends layouts/default
+
+block main
+    h3= title
+
+block content
+    .container
+        .row
+            table.table.table-hover
+                thead
+                    tr
+                        th ##
+                        th ID
+                        th Participants
+
+                each conversation , i in conversations
+                    tbody
+                        tr
+                            input(type="hidden", id="#{conversation._id}", name="_csrf", value="#{csrf_token}")
+                            th(scope='row') #{ i }
+                            td
+                                a(href="") #{ conversation._id }
+                                each participant , i in conversation.participants
+                                    td
+                                        a(href="#") #{ conversation.participants[i] }
+
