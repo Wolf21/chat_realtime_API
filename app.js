@@ -5,9 +5,12 @@ const express = require('express'),
       logger = require('morgan'),
       bodyParser = require('body-parser'),
       mongoose = require ('mongoose'),
-       path = require('path'),
-      config = require('./config/main');
-      //flash = require('connect-flash');
+      path = require('path'),
+      config = require('./config/main'),
+      passport = require('passport'),
+      flash = require('connect-flash'),
+      session = require('express-session');
+const cookieParser = require('cookie-parser');
 
 // Database Connection
 mongoose.connect(config.database);  
@@ -24,11 +27,22 @@ const io = require('socket.io').listen(server);
 socketEvents(io);
 
 //
-//app.use(flash());
+app.use(cookieParser());
+
+app.use(flash());
 app.use(express.static('public'));
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
+
+//
+
+app.use(session({
+    secret: 'Thisismytestkey',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: true }
+    }));
 // Setting up basic middleware for all Express requests
 app.use(logger('dev')); // Log requests to API using morgan
 
@@ -42,7 +56,9 @@ app.use(logger('dev')); // Log requests to API using morgan
 // });
 
 app.use(bodyParser.urlencoded({ extended: false }));  
-app.use(bodyParser.json());  
+app.use(bodyParser.json());
+app.use(passport.initialize());
+app.use(passport.session());
 
 const apiRoutes = (require('./controllers/routes'));
 // connect the api routes under /api/*

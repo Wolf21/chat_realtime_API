@@ -41,27 +41,27 @@ exports.login = function(req, res, next) {
 
 
 //========================================
-// Registration Route
+// Register Route
 //========================================
 exports.register = function(req, res, next) {  
-  // Check for registration errors
+
   const email = req.body.email;
   const firstName = req.body.firstName;
   const lastName = req.body.lastName;
   const password = req.body.password;
   const role = req.body.role;
 
-  // Return error if no email provided
+  // Return error if no email
   if (!email) {
     return res.status(422).send({ error: 'You must enter an email address.'});
   }
 
-  // Return error if full name not provided
+  // Return error if No full name
   if (!firstName || !lastName) {
     return res.status(422).send({ error: 'You must enter your full name.'});
   }
 
-  // Return error if no password provided
+  // Return error if no password
   if (!password) {
     return res.status(422).send({ error: 'You must enter a password.' });
   }
@@ -69,12 +69,12 @@ exports.register = function(req, res, next) {
   User.findOne({ email: email }, function(err, existingUser) {
       if (err) { return next(err); }
 
-      // If user is not unique, return error
+      // If user existed, return error
       if (existingUser) {
         return res.status(422).send({ error: 'That email address is already in use.' });
       }
 
-      // If email is unique and password was provided, create account
+      // If email is unique and have password , create account
       let user = new User({
         email: email,
         password: password,
@@ -85,8 +85,6 @@ exports.register = function(req, res, next) {
       user.save(function(err, user) {
         if (err) { return next(err); }
 
-        // Subscribe member to Mailchimp list
-        // mailchimp.subscribeToNewsletter(user.email);
 
         // Respond with JWT if user was created
 
@@ -100,9 +98,6 @@ exports.register = function(req, res, next) {
   });
 }
 
-//========================================
-// Authorization Middleware
-//========================================
 
 // Role authorization check
 exports.roleAuthorization = function(role) {  
@@ -126,5 +121,59 @@ exports.roleAuthorization = function(role) {
 
   }
 }
+exports.isLoggedIn= function(req, res, next) {
+    if (req.user) {
+        next();
+    } else {
+        res.redirect('/admin/login');
+    }
+}
+
+exports.index = (req, res, next) => {
+    console.log("URL " + req.url + ": " + req.user);
+    if (req.session.cookie.originalMaxAge !== null) {
+        res.redirect('/home');
+    } else {
+        res.render('admin/index', { title: 'Index Page' });
+    }
+}
+
+/**
+ * Controller login
+ * Method: GET
+ */
+
+exports.getLogin = (req, res) => {
+    var errors = req.flash('error');
+    res.render('admin/login', { title: 'Login', messages: errors, hasErrors: errors.length > 0 });
+}
+
+/**
+ * Controller Login
+ * Method: POST
+ */
+
+exports.login = (req, res) => {
+    // res.locals.user = req.user;
+    req.session.cookie.user = req.user;
+    console.log(req.session.cookie.user);
+    // if (req.body.rememberme) {
+    //     req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+    // } else {
+    if (req.session.expires = null) {
+        res.redirect('/admin');
+    };
+}
+
+/**
+ * Controller home
+ * Method: GET
+ */
+
+exports.home = (req, res) => {
+    console.log(`Cookie : ${req.session.cookie}     passport: ${req.user}`);
+    res.render('admin/home', { title: 'Home', user: req.user });
+}
+
 
       

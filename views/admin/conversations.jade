@@ -19,8 +19,8 @@ block content
                             input(type="hidden", id="#{conversation._id}", name="_csrf", value="#{csrf_token}")
                             th(scope='row') #{ i }
                             td
-                                a(href="") #{ conversation._id }
+                                a(href="/admin/conversations/details/#{conversation._id}") #{ conversation._id }
                                 each participant , i in conversation.participants
                                     td
-                                        a(href="#") #{ conversation.participants[i] }
+                                        a(href="/admin/conversations/details/author/#{conversation.participants[i]}") #{ conversation.participants[i] }
 

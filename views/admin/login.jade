@@ -18,7 +18,7 @@ block content
           .panel-body
             .row
               .col-lg-12
-                form#login-form(action='admin/index', method='post', role='form', style='display: block;')
+                form#login-form( method='post', role='form', style='display: block;')
                   .form-group
                     input(type="hidden", name="_csrf", value="#{csrf_token}")
                   if (hasErrors)

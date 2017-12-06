@@ -1,5 +1,5 @@
 
-// Importing Passport, strategies, and config
+// Import Passport, strategy, and config,u user models
 const passport = require('passport'),  
       User = require('../models/user'),
       config = require('./main'),
@@ -9,7 +9,7 @@ const passport = require('passport'),
 
 const localOptions = { usernameField: 'email' };  
 
-// Setting up local login strategy
+// Setting local login strategy
 const localLogin = new LocalStrategy(localOptions, function(email, password, done) {  
   User.findOne({ email: email }, function(err, user) {
     if(err) { return done(err); }
@@ -18,42 +18,41 @@ const localLogin = new LocalStrategy(localOptions, function(email, password, don
     user.comparePassword(password, function(err, isMatch) {
       if (err) { return done(err); }
       if (!isMatch) { return done(null, false, { error: "Your login details could not be verified. Please try again." }); }
-
+      //req.session.cookie.user = req.user;
       return done(null, user);
     });
   });
 });
 
-//Setting up local admin login strategy
+//Setting local admin login strategy
 
-// const LoginAdmin = new LocalStrategy(localOptions, function(email, password, done) {
-//     User.findOne({ email: email }, function(err, user) {
-//         if(err) { return done(err); }
-//         if(!user) {
-//             return done(null, false,
-//                 {error: 'Your login details could not be verified. Please try again.'});
-//         }else{
-//           if (user.role !== 1) {
-//             return done (null, false, {error: 'Your login details could not be verified. Please try again.'});
-//           }
-//         }
-//         user.comparePassword(password, function(err, isMatch) {
-//             if (err) { return done(err); }
-//             if (!isMatch) { return done(null, false, { error: "Your login details could not be verified. Please try again." }); }
-//
-//             return done(null, user);
-//         });
-//     });
-//});
+const LoginAdmin = new LocalStrategy(localOptions, function(email, password, done) {
+    User.findOne({ email: email }, function(err, user) {
+        if(err) { return done(err); }
+        if(!user) {
+            return done(null, false,
+                {error: 'Your login details could not be verified. Please try again.'});
+        }else{
+          if (user.role === 'User') {
+            return done (null, false, {error: 'Your login details could not be verified. Please try again.'});
+          }
+        }
+        user.comparePassword(password, function(err, isMatch) {
+            if (err) { return done(err); }
+            if (!isMatch) { return done(null, false, { error: "Your login details could not be verified. Please try again." }); }
+            //req.session.user = req.user;
+            return done(null, user);
+        });
+    });
+});
 
 const jwtOptions = {  
-  // Telling Passport to check authorization headers for JWT
+  // check authorization headers for JWT
   jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('jwt'),
-  // Telling Passport where to find the secret
   secretOrKey: config.secret
 };
 
-// Setting up JWT login strategy
+// Setting JWT login strategy
 const jwtLogin = new JwtStrategy(jwtOptions, function(payload, done) {  
   User.findById(payload._id, function(err, user) {
     if (err) { return done(err, false); }
@@ -68,4 +67,4 @@ const jwtLogin = new JwtStrategy(jwtOptions, function(payload, done) {
 
 passport.use(jwtLogin);  
 passport.use(localLogin);
-//passport.use(LoginAdmin);
+passport.use(LoginAdmin);

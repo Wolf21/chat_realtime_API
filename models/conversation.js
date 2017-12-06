@@ -6,7 +6,10 @@ const mongoose = require('mongoose'),
 const ConversationSchema = new Schema({  
   participants: [{ 
   	type: Schema.Types.ObjectId,
-  	ref: 'User'}],
+  	ref: 'User'}
+      // .populate([{ path: 'User', select: 'email FirstName LastName' }
+      // ])
+  ]
 });
 
 module.exports = mongoose.model('Conversation', ConversationSchema);

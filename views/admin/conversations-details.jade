@@ -1,0 +1,48 @@
+extends layouts/default
+
+block main
+    h3= title
+
+block content
+    .container
+        .row
+            table.table.table-hover
+                thead
+                    tr
+                        th ##
+                        th Author
+                        th Message
+                        th Delete
+                each messages, i in message
+                    tbody
+                        tr
+                            input(type="hidden", id="#{messages._id}", name="_csrf", value="#{csrf_token}")
+                            th(scope='row') #{ i }
+                            td
+                                a(href="/admin/conversations/details/author/#{messages.author}") #{ messages.author }
+                            td #{messages.body}
+                            td
+                                span.btn.btn-danger.deleteItem(data-id='#{ messages._id }') Delete
+
+    script(type='text/javascript').
+        $(document).ready(function () {
+            jQuery(".deleteItem").click(function () {
+                var value = $(this).data("id");
+                var choose = confirm("Are you want to delete!");
+                if (choose) {
+                    $.ajaxSetup({
+                        headers: {"X-CSRF-Token": $("#" + value).val()}
+                    });
+                    $.ajax({
+                        method: "DELETE",
+                        url: "/admin/conversations/delete_message",
+                        data: {messageId: value}
+                    })
+                        .done(function (msg) {
+                            console.log("Successfully : " + msg);
+                            alert("Delete successfully!!")
+                            location.reload();
+                        });
+                }
+            })
+        });

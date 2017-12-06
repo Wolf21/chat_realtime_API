@@ -1,0 +1,22 @@
+extends layouts/default
+block main
+    h1 Author Details
+
+block content
+    each users , i in user
+
+        h3
+            strong Email  :
+        p #{users.email}
+
+        h3
+            strong Full Name  :
+        p #{users.profile.firstName} #{users.profile.lastName}
+
+        h3
+            strong Role  :
+        p #{users.role}
+
+        h3
+            strong Create date  :
+        p #{users.createdAt}

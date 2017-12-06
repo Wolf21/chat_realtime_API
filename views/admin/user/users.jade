@@ -12,19 +12,19 @@ block content
                         th ##
                         th Email
                         th Full Name
-                        th Admin
+                        th Role
                         th Action
-                each users, i in users
+                each user, i in users
                     tbody
                         tr
-                            input(type="hidden", id="#{users._id}", name="_csrf", value="#{csrf_token}")
+                            input(type="hidden", id="#{user._id}", name="_csrf", value="#{csrf_token}")
                             th(scope='row') #{ i }
-                            td #{ users.email }
-                            td #{ users.profile.firstName } #{users.profile.lastName}
-                            td #{ users.admin }
-                            if users.role === 0
+                            td #{ user.email }
+                            td #{ user.profile.firstName } #{user.profile.lastName}
+                            td #{ user.role }
+                            if (user.role === 'User') || (user.role ==='Admin')
                                 td
-                                    a(href='/admin/user/edit/#{ users._id }' style='margin-right: 3px;')
+                                    a(href='/admin/user/edit/#{ user._id }' style='margin-right: 3px;')
                                         span.btn.btn-primary Update
                                     span.btn.btn-danger.deleteItem(data-id='#{ user._id }') Delete
                             else
@@ -44,11 +44,11 @@ block content
                         url: "/admin/user/delete",
                         data: { userId: value }
                     })
-                    .done(function(msg) {
-                        console.log( "Successfully : " + msg );
-                        alert("Delete successfully!!")
-                        location.reload();
-                    });
+                        .done(function(msg) {
+                            console.log( "Successfully : " + msg );
+                            alert("Delete successfully!!")
+                            location.reload();
+                        });
                 }
             })
         });

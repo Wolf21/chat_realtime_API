@@ -1,62 +1,67 @@
-// const formidable = require('formidable');
-// const path = require('path');
-// const fs = require('fs');
-// const async = require('async');
+
+// const formidable =
 const express = require ('express');
-const passport = require ('passport');
-//const { respond, respondOrRedirect } = require('../utils');
-const User = require('../models/user');
-
+const path = require('path');
+const fs = require('fs');
+const async = require('async');
+const passport =require('passport');
+const passportService = require('../config/passport');
+const { respond , respondOrRedirect } = require('../utils');
 const requireLogin = passport.authenticate('local', { session: false });
+const authentication = require('./authentication');
 
-var app = express();
+const User = require('../models/user');
+const Conversation = require('../models/conversation');
+const Message = require('../models/message');
 
-    /** Login admins
-    * */
+//const requireLogin = passport.authenticate('localLogin', { session: false });
+//const requireAdmin = authorization.admin;
+//var app = express();
+function isLoggedIn(req, res, next) {
+    if (req.session.cookie.user) {
+        return next();
+    }
+    res.redirect('/admin/login');
+}
+var router = express.Router();
 
-    app.get('/admin/login', (req, res) => {
-        // var success = req.flash('success');
-        res.render('admin/login',
-            {
-                title: 'Admin Login'
-            }
-        );
+    // router.get('/admin', function(req, res) {
+    //     // var success = req.flash('success');
+    //         respond(res, 'admin/index', {
+    //             title: 'Admin Index',
+    //             success: req.flash('success', 'Login successfully!')
+    //         });
+    // });
 
-    });
+    router.get('/admin',authentication.index);
 
-app.get('/admin', (req, res) => {
-    res.render( 'admin/index',
-        {
-            title: 'Admin index'
-        }
-    );
-});
-    /** Admin index
-     * */
+    router.get('/admin/login',authentication.getLogin);
 
-    app.post('/admin/index',requireLogin, (req, res) => {
-        res.render( 'admin/index',
-            {
-                title: 'Admin index'
-            }
-        );
-    });
+    router.post('/admin/login',authentication.login, passport.authenticate('local', {
+        successRedirect: '/admin',
+        failureRedirect: '/admin/login',
+        failureFlash: true,
+        session:false
+    }));
+    router.get('/admin/home',isLoggedIn(),authentication.home);
+
+    // respond(res, '/admin/index', {
+    //     title: 'Admin Index',
+    //     success: req.flash('success', 'Login successfully!')
+    // });
 
     /**
      * Function get all users.
      */
 
-    app.get('/admin/user/listUser', (req, res) => {
+    router.get('/admin/listUser', function(req, res) {
         User.find({
             block: 0
-        }, (err, users) => {
-            console.log(users);
-            res.render('admin/user/users',
-                {
-                    title: 'Users',
-                    users: users
-                }
-            );
+        }, function(err, users) {
+            respond(res, 'admin/user/users', {
+                title: 'Users',
+                users: users
+            });
         });
     });
 
@@ -64,39 +69,40 @@ app.get('/admin', (req, res) => {
     /**
      * Show information admin user.
      */
-    app.get('/admin/user/profile', (req, res) => {
+    router.get('/admin/user/profile', function(req, res) {
         let userId = req.user._id;
         console.log('ID User: ', userId);
         if (userId) {
             // Service find user by id.
             User.findOne({
                 _id: userId
-            }, (err, user) => {
+            }, function(err, user) {
                 console.log(user);
                 if (!err && user) {
                     // Response and render a webpage.
-                    res.render( 'admin/user/profile', {
+                    respond(res, 'admin/user/profile', {
                         title: 'Admin Info',
-                        user: users
+                        user: user
                     });
                 } else {
                     // Redirect page.
-                     res.render( '/admin/index',
-                     {
+                    respondOrRedirect({ req, res }, '/admin/listUser', {}, {
                         type: 'success',
                         text: 'Edit user successfully'
-                     });
+                    });
                 }
             });
         } else {
             // res.redirect('admin/users');
-            res.render( '/admin/user/users',
-                {
-                    user: users,
-                    type: 'warning',
-                    text: 'Cannot find id user'
-                });
+            respondOrRedirect({ req , res }, '/admin/listUser', {}, {
+                type: 'warning',
+                text: 'Cannot find id user'
+            });
         }
+        // respond(res, 'admin/user/profile', {
+        //     title: 'Admin Profile',
+        //     success: req.flash('success', 'Login successfully!')
+        // });
     });
 
 
@@ -104,34 +110,30 @@ app.get('/admin', (req, res) => {
      * Function get information user by id.
      */
 
-    app.get('/admin/user/edit/:userId', (req, res) => {
+    router.get('/admin/user/edit/:userId', function(req, res) {
         let userId = req.params.userId;
         if (userId) {
             // Service find user by id.
             User.findOne({
                 _id: userId
-            }, (err, user) => {
-                console.log(user);
+            }, function(err, user) {
                 if (!err && user) {
                     // Response and render a webpage.
-                    res.render('admin/user/edit-user',
-                    {
+                    respond(res, 'admin/user/edit-user', {
                         title: 'Edit User',
-                        users: user
+                        user: user
                     });
                 } else {
                     // Redirect page.
-                    res.render('/admin/index',
-                    {
+                    respondOrRedirect({ req, res }, '/admin/listUser', {}, {
                         type: 'success',
                         text: 'Edit user successfully'
                     });
                 }
             });
         } else {
-
-            res.render('/admin/user/users',
-            {
+            // res.redirect('admin/users');
+            respondOrRedirect({ req, res }, '/admin/listUser', {}, {
                 type: 'warning',
                 text: 'Cannot find id user'
             });
@@ -142,46 +144,40 @@ app.get('/admin', (req, res) => {
      * Function update information user by admin.
      */
 
-    app.post('/admin/user/edit/:userId', (req, res) => {
+    router.post('/admin/user/edit/:userId', function(req, res) {
         let userId = req.params.userId;
         if (userId) {
             User.findOne({
                 _id: userId
-            }, (err, user) => {
-                console.log(user);
+            }, function(err, user){
                 if (!err && user) {
                     console.log(req.body);
                     user.profile.firstName = req.body.firstName;
                     user.profile.lastName = req.body.lastName;
-                    user.role = req.body.role == 0 ? false : true;
-                    user.save((err) => {
+                    user.role = req.body.role === 'User' ? 'User' : 'Admin';
+                    user.save(function(err) {
                         if (err) {
                             console.log(err);
                         } else {
                             // res.redirect('/admin/users');
                             console.log('Update thanh cong!');
-                            res.render('admin/user/users',
-                            {
-                                users: user,
+                            respondOrRedirect({ req, res }, '/admin/listUser', {}, {
                                 type: 'success',
                                 text: 'Update user successfully'
                             });
                         }
                     });
                 } else {
+                    // res.redirect('/admin/users');
                     console.log('Khong tim thay user.');
-                    res.render('admin/user/users',
-                    {
-                        users: user,
+                    respondOrRedirect({ req, res }, '/admin/listUser', {}, {
                         type: 'errors',
                         text: 'Cannot found user from database!'
                     });
                 }
             });
         } else {
-            res.render('admin/user/users',
-            {
-                users: user,
+            respondOrRedirect({ req, res }, '/admin/listUser', {}, {
                 type: 'warning',
                 text: 'Cannot find id user'
             });
@@ -192,7 +188,7 @@ app.get('/admin', (req, res) => {
      * Function delete user by id.
      */
 
-    app.delete('/admin/user/delete', (req, res) => {
+    router.delete('/admin/user/delete', function(req, res) {
         let idUser = req.body.userId;
         User.update({
             _id: idUser
@@ -202,7 +198,7 @@ app.get('/admin', (req, res) => {
             }
         }, {
             multi: true
-        }, (err) => {
+        }, function(err) {
             if (err) {
                 throw err;
             } else {
@@ -211,4 +207,113 @@ app.get('/admin', (req, res) => {
             }
         });
     })
- module.exports = app;
+
+    /** Routes list conversation
+    */
+    router.get('/admin/conversations/list', function(req, res) {
+        Conversation.find( function(err, conversations) {
+            respond(res, 'admin/conversations', {
+                title: 'Conversations',
+                conversations : conversations
+            });
+        });
+    });
+
+
+    /**
+     * Function get information user by id.
+     */
+
+    router.get('/admin/conversations/details/:ConversationId', function(req, res) {
+        let ConversationId = req.params.ConversationId;
+        if (ConversationId) {
+            // Service find conversation by id.
+            Message.find({
+                conversationId: ConversationId
+            }, function(err, message) {
+                if (!err && message) {
+                    // Response and render a web page.
+                    respond(res, 'admin/conversations-details', {
+                        title: 'Conversation Details',
+                        message : message
+                    });
+                } else {
+                    // Redirect page.
+                    respondOrRedirect({ req, res }, '/admin/conversations/list', {}, {
+                        type: 'success',
+                        text: 'successfully'
+                    });
+                }
+            });
+        } else {
+            // res.redirect('admin/users');
+            respondOrRedirect({ req, res }, '/admin/conversations/list', {}, {
+                type: 'warning',
+                text: 'Cannot find id conversation'
+            });
+        }
+    });
+
+
+
+    /**
+     * Routes author details
+     */
+
+    router.get('/admin/conversations/details/author/:authorId', function(req, res) {
+        let authorId = req.params.authorId;
+        if (authorId) {
+            // Service find conversation by id.
+            User.find({
+                _id: authorId
+            }, function(err, user) {
+                if (!err && user) {
+                    // Response and render a web page.
+                    respond(res, 'admin/conversations-author', {
+                        title: 'Author Details',
+                        user : user
+                    });
+                } else {
+                    // Redirect page.
+                    respondOrRedirect({ req, res }, '/admin/conversations/list', {}, {
+                        type: 'success',
+                        text: 'successfully'
+                    });
+                }
+            });
+        } else {
+            // res.redirect('admin/users');
+            respondOrRedirect({ req, res }, '/admin/conversations/list', {}, {
+                type: 'warning',
+                text: 'Cannot find id conversation'
+            });
+        }
+    });
+
+    /**
+     * delete message
+     **/
+    router.delete('/admin/conversations/delete_message', function(req, res) {
+        let messageId = req.body.messageId;
+        Message.deleteOne({
+            _id: messageId
+        },function(err) {
+            if (err) {
+                throw err;
+            } else {
+                res.json(400);
+                console.log('Xoa thanh cong!');
+            }
+        });
+    })
+
+    /**
+     * Routes logout
+     */
+    router.get('/admin/logout',function(req, res){
+                req.logout();
+                req.session.destroy(function(err){
+                    res.redirect('/admin/login');
+                });
+            })
+module.exports = router;

@@ -22,12 +22,14 @@ const UserSchema = new Schema({
     lastName: { type: String }
   },
   role: {
-    type: Number,
-    default: 0
+    type: String,
+    default: 'User'
   },
   block: { type: Number,enum: [ 0,1 ], default: 0 },
   resetPasswordToken: { type: String },
-  resetPasswordExpires: { type: Date }
+  resetPasswordExpires: { type: Date },
+  createdAt: { type: Date, default: Date.now() },
+  updatedAt: Date
 },
 {
   timestamps: true
