@@ -54,11 +54,12 @@ app.use(logger('dev')); // Log requests to API using morgan
 //   res.header("Access-Control-Allow-Credentials", "true");
 //   next();
 // });
-
+//app.use(cookieParser);
 app.use(bodyParser.urlencoded({ extended: false }));  
 app.use(bodyParser.json());
 app.use(passport.initialize());
 app.use(passport.session());
+
 
 const apiRoutes = (require('./controllers/routes'));
 // connect the api routes under /api/*

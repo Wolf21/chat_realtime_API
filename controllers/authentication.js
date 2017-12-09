@@ -4,6 +4,7 @@
 const jwt = require('jsonwebtoken'),  
       crypto = require('crypto'),
       User = require('../models/user'),
+      passport = require ('passport');
       config = require('../config/main');
 
       
@@ -111,7 +112,7 @@ exports.roleAuthorization = function(role) {
       }
 
       // If user is found, check role.
-      if (foundUser.role == role) {
+      if (foundUser.role === role) {
         return next();
       }
 
@@ -134,7 +135,7 @@ exports.index = (req, res, next) => {
     if (req.session.cookie.originalMaxAge !== null) {
         res.redirect('/home');
     } else {
-        res.render('admin/index', { title: 'Index Page' });
+        res.redirect('/admin/login' );
     }
 }
 
@@ -154,15 +155,33 @@ exports.getLogin = (req, res) => {
  */
 
 exports.login = (req, res) => {
-    // res.locals.user = req.user;
+
+
+    // passport.serializeUser( (user, done) => {
+    //     var sessionUser = user;
+    //     done(null, sessionUser)
+    // })
+    //
+    // passport.deserializeUser( (sessionUser, done) => {
+    //     done(null, sessionUser)
+    // })
+    // console.log(".....",sessionUser);
+
     req.session.cookie.user = req.user;
-    console.log(req.session.cookie.user);
-    // if (req.body.rememberme) {
-    //     req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
-    // } else {
-    if (req.session.expires = null) {
-        res.redirect('/admin');
-    };
+
+
+    if (req.body.rememberme) {
+        req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+    } else {
+        req.session.cookie.expires = null;
+    }
+    req.session.save(function (err) {
+        if (!err){
+            console.log("====",req.session);
+            res.redirect('/admin/home');
+        }
+
+    });
 }
 
 /**
@@ -171,8 +190,8 @@ exports.login = (req, res) => {
  */
 
 exports.home = (req, res) => {
-    console.log(`Cookie : ${req.session.cookie}     passport: ${req.user}`);
-    res.render('admin/home', { title: 'Home', user: req.user });
+    console.log('Cookie :', req.session.cookie  ,   'passport:', req.session.user);
+    res.render('admin/home', { title: 'Home', user: req.user ,cookie:req.session.cookie});
 }
 
 

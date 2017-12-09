@@ -18,10 +18,12 @@ const Message = require('../models/message');
 //const requireAdmin = authorization.admin;
 //var app = express();
 function isLoggedIn(req, res, next) {
-    if (req.session.cookie.user) {
-        return next();
+    if (req.isAuthenticated) {
+        next();
+    }else {
+        res.redirect('/admin/login');
     }
-    res.redirect('/admin/login');
+
 }
 var router = express.Router();
 
@@ -34,16 +36,17 @@ var router = express.Router();
     // });
 
     router.get('/admin',authentication.index);
+    router.get('/admin/home',isLoggedIn,authentication.home);
 
     router.get('/admin/login',authentication.getLogin);
 
-    router.post('/admin/login',authentication.login, passport.authenticate('local', {
-        successRedirect: '/admin',
+    router.post('/admin/login', passport.authenticate('local', {
+        //successRedirect: '/admin',
         failureRedirect: '/admin/login',
         failureFlash: true,
         session:false
-    }));
-    router.get('/admin/home',isLoggedIn(),authentication.home);
+    }),authentication.login);
+
 
     // respond(res, '/admin/index', {
     //     title: 'Admin Index',
